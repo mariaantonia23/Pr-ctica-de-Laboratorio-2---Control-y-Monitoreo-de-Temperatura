@@ -1,0 +1,58 @@
+#define PIN_TEMP A0
+#define RELE 12
+
+const int led_rojo_rgb = 9;
+const int led_verde_rgb = 10;
+const int led_azul_rgb = 11;
+
+float valor_temperatura;
+
+void setup() {
+    Serial.begin(9600);
+    pinMode(PIN_TEMP, INPUT);
+    pinMode(RELE, OUTPUT);
+    pinMode(led_rojo_rgb, OUTPUT);
+    pinMode(led_verde_rgb, OUTPUT);
+    pinMode(led_azul_rgb, OUTPUT);
+    digitalWrite(RELE, LOW);  // Apagar el relé al inicio
+}
+
+void loop() {
+    int lectura = analogRead(PIN_TEMP);
+    valor_temperatura = (lectura * 5.0 / 1023.0) * 100.0; // Conversión a °C
+    Serial.print("Temperatura: ");
+    Serial.print(valor_temperatura);
+    Serial.println(" °C");
+    
+    ajustarColorRGB(valor_temperatura);
+    
+    if (valor_temperatura > 30.0) {  // Umbral para activar ventilador
+        digitalWrite(RELE, HIGH);
+    } else {
+        digitalWrite(RELE, LOW);
+    }
+    
+    delay(1000);
+}
+
+void ajustarColorRGB(float temp) {
+    int rojo, verde, azul;
+    
+    if (temp < 20.0) { // Frío -> Azul
+        rojo = 0;
+        verde = 0;
+        azul = map(temp, 0, 20, 255, 0);
+    } else if (temp >= 20.0 && temp <= 30.0) { // Templado -> Verde
+        rojo = 0;
+        verde = map(temp, 20, 30, 0, 255);
+        azul = map(temp, 20, 30, 255, 0);
+    } else { // Caliente -> Rojo
+        rojo = map(temp, 30, 40, 0, 255);
+        verde = map(temp, 30, 40, 255, 0);
+        azul = 0;
+    }
+    
+    analogWrite(led_rojo_rgb, rojo);
+    analogWrite(led_verde_rgb, verde);
+    analogWrite(led_azul_rgb, azul);
+}
